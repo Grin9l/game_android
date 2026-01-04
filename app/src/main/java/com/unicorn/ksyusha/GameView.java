@@ -25,8 +25,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private float playerX;
     private float playerY;
     private float playerSize = 80;
-    private int playerLane = 1; // 0 = лево, 1 = центр, 2 = право
-    private float[] lanePositions = new float[3];
+    private int playerLane = 0; // 0 = лево, 1 = право (только 2 дорожки)
+    private float[] lanePositions = new float[2];
     
     // Враги
     private ArrayList<Enemy> enemies;
@@ -36,7 +36,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     
     // Игровые параметры
     private int score = 0;
-    private float gameSpeed = 5f;
+    private float gameSpeed = 10f; // Увеличена начальная скорость
     private Paint paint;
     private Paint textPaint;
     private Paint playerPaint;
@@ -101,14 +101,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             Log.d(TAG, "Screen size: " + screenWidth + "x" + screenHeight);
         }
         
-        // Инициализация позиций дорожек
-        float laneWidth = screenWidth / 3f;
-        lanePositions[0] = laneWidth / 2f;
-        lanePositions[1] = laneWidth + laneWidth / 2f;
-        lanePositions[2] = laneWidth * 2 + laneWidth / 2f;
+        // Инициализация позиций дорожек (только 2 дорожки)
+        float laneWidth = screenWidth / 2f;
+        lanePositions[0] = laneWidth / 2f; // Левая дорожка
+        lanePositions[1] = laneWidth + laneWidth / 2f; // Правая дорожка
         
         // Начальная позиция игрока
-        playerX = lanePositions[1];
+        playerX = lanePositions[0];
         playerY = screenHeight - 200;
         
         // Запускаем игру только если еще не запущена
@@ -124,10 +123,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         screenHeight = height;
         
         if (screenWidth > 0 && screenHeight > 0) {
-            float laneWidth = screenWidth / 3f;
-            lanePositions[0] = laneWidth / 2f;
-            lanePositions[1] = laneWidth + laneWidth / 2f;
-            lanePositions[2] = laneWidth * 2 + laneWidth / 2f;
+            float laneWidth = screenWidth / 2f;
+            lanePositions[0] = laneWidth / 2f; // Левая дорожка
+            lanePositions[1] = laneWidth + laneWidth / 2f; // Правая дорожка
             
             playerX = lanePositions[playerLane];
         }
@@ -152,9 +150,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         score = 0;
         enemies.clear();
         enemySpawnTimer = 0;
-        gameSpeed = 5f;
-        playerLane = 1;
-        if (lanePositions != null && lanePositions.length > 1) {
+        gameSpeed = 10f; // Увеличена начальная скорость
+        playerLane = 0;
+        if (lanePositions != null && lanePositions.length > 0) {
             playerX = lanePositions[playerLane];
         }
         
@@ -236,7 +234,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
     
     private void spawnEnemy() {
-        int lane = random.nextInt(3);
+        int lane = random.nextInt(2); // Только 2 дорожки
         float x = lanePositions[lane];
         float y = -100;
         enemies.add(new Enemy(x, y));
@@ -259,13 +257,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 screenWidth = 1080;
                 screenHeight = 1920;
             }
-            // Обновляем позиции дорожек
-            float laneWidth = screenWidth / 3f;
-            lanePositions[0] = laneWidth / 2f;
-            lanePositions[1] = laneWidth + laneWidth / 2f;
-            lanePositions[2] = laneWidth * 2 + laneWidth / 2f;
+            // Обновляем позиции дорожек (только 2 дорожки)
+            float laneWidth = screenWidth / 2f;
+            lanePositions[0] = laneWidth / 2f; // Левая дорожка
+            lanePositions[1] = laneWidth + laneWidth / 2f; // Правая дорожка
             if (playerX == 0) {
-                playerX = lanePositions[1];
+                playerX = lanePositions[0];
             }
             if (playerY == 0) {
                 playerY = screenHeight - 200;
@@ -279,12 +276,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         // Фон
         canvas.drawColor(Color.parseColor("#87CEEB")); // Небесно-голубой
         
-        // Дорожки
+        // Дорожки (только 2 дорожки)
         paint.setColor(Color.parseColor("#90EE90")); // Светло-зеленый
-        float laneWidth = screenWidth / 3f;
-        for (int i = 1; i < 3; i++) {
-            canvas.drawLine(i * laneWidth, 0, i * laneWidth, screenHeight, paint);
-        }
+        float laneWidth = screenWidth / 2f;
+        canvas.drawLine(laneWidth, 0, laneWidth, screenHeight, paint); // Разделительная линия между дорожками
         
         // Враги
         for (Enemy enemy : enemies) {
@@ -323,29 +318,67 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
     
     private void drawUnicorn(Canvas canvas, float x, float y, float size) {
-        // Тело единорога (розовый овал)
-        RectF body = new RectF(x - size/2, y - size/3, x + size/2, y + size/2);
-        playerPaint.setColor(Color.parseColor("#FFB6C1")); // Светло-розовый
+        // Более реалистичный единорог (похож на лошадь)
+        
+        // Тело (более вытянутое, как у лошади)
+        RectF body = new RectF(x - size/2.5f, y - size/4, x + size/2.5f, y + size/2);
+        playerPaint.setColor(Color.parseColor("#F5DEB3")); // Бежевый/кремовый цвет
         canvas.drawOval(body, playerPaint);
         
-        // Голова
-        RectF head = new RectF(x - size/3, y - size, x + size/3, y - size/3);
+        // Голова (более реалистичная форма)
+        RectF head = new RectF(x - size/2.5f, y - size * 1.1f, x + size/4, y - size/4);
         canvas.drawOval(head, playerPaint);
         
-        // Рог (золотой треугольник)
+        // Морда (вытянутая)
+        RectF muzzle = new RectF(x - size/2.5f, y - size * 0.9f, x - size/5, y - size/4);
+        playerPaint.setColor(Color.parseColor("#E6D3A3")); // Светлее для морды
+        canvas.drawOval(muzzle, playerPaint);
+        
+        // Уши
+        Path leftEar = new Path();
+        leftEar.moveTo(x - size/3, y - size * 1.05f);
+        leftEar.lineTo(x - size/2.5f, y - size * 1.25f);
+        leftEar.lineTo(x - size/4, y - size * 1.1f);
+        leftEar.close();
+        playerPaint.setColor(Color.parseColor("#F5DEB3"));
+        canvas.drawPath(leftEar, playerPaint);
+        
+        Path rightEar = new Path();
+        rightEar.moveTo(x + size/5, y - size * 1.05f);
+        rightEar.lineTo(x + size/4, y - size * 1.25f);
+        rightEar.lineTo(x + size/3, y - size * 1.1f);
+        rightEar.close();
+        canvas.drawPath(rightEar, playerPaint);
+        
+        // Рог (золотой, спиралевидный)
         Path horn = new Path();
-        horn.moveTo(x, y - size);
-        horn.lineTo(x - size/6, y - size * 1.3f);
-        horn.lineTo(x + size/6, y - size * 1.3f);
-        horn.close();
+        horn.moveTo(x, y - size * 1.1f);
+        for (int i = 0; i < 8; i++) {
+            float angle = (float) (i * Math.PI / 4);
+            float offsetX = (float) Math.cos(angle) * size/30;
+            float offsetY = (float) Math.sin(angle) * size/30;
+            horn.lineTo(x + offsetX, y - size * 1.3f + i * size/20 + offsetY);
+        }
         paint.setColor(Color.parseColor("#FFD700")); // Золотой
+        paint.setStrokeWidth(size/15);
+        paint.setStyle(Paint.Style.STROKE);
         canvas.drawPath(horn, paint);
+        paint.setStyle(Paint.Style.FILL);
         
-        // Глаз
+        // Глаза (более реалистичные)
+        paint.setColor(Color.WHITE);
+        canvas.drawCircle(x - size/6, y - size * 0.75f, size/12, paint);
+        canvas.drawCircle(x + size/8, y - size * 0.75f, size/12, paint);
         paint.setColor(Color.BLACK);
-        canvas.drawCircle(x - size/8, y - size * 0.7f, size/20, paint);
+        canvas.drawCircle(x - size/6, y - size * 0.75f, size/20, paint);
+        canvas.drawCircle(x + size/8, y - size * 0.75f, size/20, paint);
         
-        // Грива (радужная)
+        // Ноздри
+        paint.setColor(Color.parseColor("#8B7355"));
+        canvas.drawCircle(x - size/3, y - size * 0.65f, size/30, paint);
+        canvas.drawCircle(x - size/3.5f, y - size * 0.65f, size/30, paint);
+        
+        // Грива (радужная, более реалистичная)
         int[] colors = {
             Color.parseColor("#FF0000"), // Красный
             Color.parseColor("#FF7F00"), // Оранжевый
@@ -355,10 +388,27 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             Color.parseColor("#4B0082"), // Индиго
             Color.parseColor("#9400D3")  // Фиолетовый
         };
+        for (int i = 0; i < 7; i++) {
+            paint.setColor(colors[i % colors.length]);
+            float maneX = x - size/3 + i * size/25;
+            float maneY = y - size * 0.85f - (float)Math.sin(i * 0.5) * size/20;
+            canvas.drawCircle(maneX, maneY, size/12, paint);
+        }
+        
+        // Хвост (радужный)
         for (int i = 0; i < 5; i++) {
             paint.setColor(colors[i % colors.length]);
-            canvas.drawCircle(x - size/4 + i * size/20, y - size * 0.8f, size/15, paint);
+            float tailX = x + size/2.5f;
+            float tailY = y + size/3 + i * size/15;
+            canvas.drawCircle(tailX, tailY, size/15, paint);
         }
+        
+        // Ноги (4 ноги)
+        playerPaint.setColor(Color.parseColor("#D2B48C")); // Темнее для ног
+        canvas.drawRect(x - size/3, y + size/2, x - size/4, y + size * 0.7f, playerPaint); // Передняя левая
+        canvas.drawRect(x - size/6, y + size/2, x - size/12, y + size * 0.7f, playerPaint); // Передняя правая
+        canvas.drawRect(x + size/12, y + size/2, x + size/6, y + size * 0.7f, playerPaint); // Задняя левая
+        canvas.drawRect(x + size/4, y + size/2, x + size/3, y + size * 0.7f, playerPaint); // Задняя правая
     }
     
     private void drawEnemy(Canvas canvas, float x, float y, float size) {
@@ -399,16 +449,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
             
-            // Переключение дорожек
+            // Переключение дорожек (только 2 дорожки)
             float touchX = event.getX();
-            float laneWidth = screenWidth / 3f;
+            float laneWidth = screenWidth / 2f;
             
             if (touchX < laneWidth) {
                 playerLane = 0; // Левая дорожка
-            } else if (touchX < laneWidth * 2) {
-                playerLane = 1; // Центральная дорожка
             } else {
-                playerLane = 2; // Правая дорожка
+                playerLane = 1; // Правая дорожка
             }
             
             return true;
