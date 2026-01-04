@@ -357,8 +357,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private void drawUnicorn(Canvas canvas, float x, float y, float size) {
         // Если изображение загружено, рисуем его
         if (bitmapLoaded && playerBitmap != null) {
-            // Масштабируем изображение до нужного размера
-            float scale = size / Math.max(playerBitmap.getWidth(), playerBitmap.getHeight());
+            // Масштабируем изображение до нужного размера (увеличено в 3 раза)
+            float scale = (size * 3f) / Math.max(playerBitmap.getWidth(), playerBitmap.getHeight());
             float scaledWidth = playerBitmap.getWidth() * scale;
             float scaledHeight = playerBitmap.getHeight() * scale;
             
@@ -416,8 +416,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private void drawEnemy(Canvas canvas, float x, float y, float size) {
         // Если изображение загружено, рисуем его
         if (enemyBitmapLoaded && enemyBitmap != null) {
-            // Масштабируем изображение до нужного размера
-            float scale = size / Math.max(enemyBitmap.getWidth(), enemyBitmap.getHeight());
+            // Масштабируем изображение до нужного размера (увеличено в 3 раза)
+            float scale = (size * 3f) / Math.max(enemyBitmap.getWidth(), enemyBitmap.getHeight());
             float scaledWidth = enemyBitmap.getWidth() * scale;
             float scaledHeight = enemyBitmap.getHeight() * scale;
             
