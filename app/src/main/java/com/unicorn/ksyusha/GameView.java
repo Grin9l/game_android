@@ -278,7 +278,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         canvas.drawCircle(x - size/8, y - size * 0.7f, size/20, paint);
         
         // Грива (радужная)
-        float[] colors = {
+        int[] colors = {
             Color.parseColor("#FF0000"), // Красный
             Color.parseColor("#FF7F00"), // Оранжевый
             Color.parseColor("#FFFF00"), // Желтый
