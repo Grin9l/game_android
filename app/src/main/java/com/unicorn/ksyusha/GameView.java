@@ -334,9 +334,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         // Игрок (единорог Ксюша)
         drawUnicorn(canvas, playerX, playerY, playerSize);
         
-        // Очки
+        // Очки (с тенью для лучшей видимости на темном фоне)
         textPaint.setTextSize(50);
+        textPaint.setColor(Color.BLACK);
+        textPaint.setStyle(Paint.Style.STROKE);
+        textPaint.setStrokeWidth(3);
+        canvas.drawText("Очки: " + score, screenWidth / 2f, 80, textPaint);
         textPaint.setColor(Color.WHITE);
+        textPaint.setStyle(Paint.Style.FILL);
         canvas.drawText("Очки: " + score, screenWidth / 2f, 80, textPaint);
         
         // Экран паузы/старта
