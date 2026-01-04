@@ -20,13 +20,16 @@ public class MainActivity extends AppCompatActivity {
             setContentView(R.layout.activity_main);
             Log.d(TAG, "Content view set");
             
-            Log.d(TAG, "Finding GameView...");
-            gameView = findViewById(R.id.gameView);
-            if (gameView == null) {
-                Log.e(TAG, "ERROR: GameView not found in layout!");
-                Toast.makeText(this, "Ошибка: GameView не найден!", Toast.LENGTH_LONG).show();
+            Log.d(TAG, "Creating GameView programmatically...");
+            // Создаем GameView программно вместо использования в XML
+            gameView = new GameView(this);
+            FrameLayout container = findViewById(R.id.container);
+            if (container != null) {
+                container.addView(gameView);
+                Log.d(TAG, "GameView created and added to container successfully");
             } else {
-                Log.d(TAG, "GameView found successfully");
+                Log.e(TAG, "ERROR: Container not found!");
+                Toast.makeText(this, "Ошибка: Контейнер не найден!", Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
             Log.e(TAG, "ERROR in onCreate", e);
