@@ -48,6 +48,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Bitmap playerBitmap;
     private boolean bitmapLoaded = false;
     
+    // Изображение врага
+    private Bitmap enemyBitmap;
+    private boolean enemyBitmapLoaded = false;
+    
     // Размеры экрана
     private int screenWidth;
     private int screenHeight;
@@ -81,8 +85,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             enemies = new ArrayList<>();
             random = new Random();
             
-            // Загружаем изображение игрока
+            // Загружаем изображения
             loadPlayerImage();
+            loadEnemyImage();
             
             Log.d(TAG, "GameView created successfully");
         } catch (Exception e) {
@@ -328,13 +333,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     
     private void loadPlayerImage() {
         try {
-            // Пытаемся загрузить изображение из ресурсов
-            playerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ksyusha);
-            if (playerBitmap != null) {
-                bitmapLoaded = true;
-                Log.d(TAG, "Player image loaded successfully");
+            // Пытаемся загрузить изображение из ресурсов (динамически, чтобы не падало при компиляции)
+            int resId = getResources().getIdentifier("ksyusha", "drawable", getContext().getPackageName());
+            if (resId != 0) {
+                playerBitmap = BitmapFactory.decodeResource(getResources(), resId);
+                if (playerBitmap != null) {
+                    bitmapLoaded = true;
+                    Log.d(TAG, "Player image loaded successfully");
+                } else {
+                    Log.w(TAG, "Player image not found, will use default drawing");
+                    bitmapLoaded = false;
+                }
             } else {
-                Log.w(TAG, "Player image not found, will use default drawing");
+                Log.w(TAG, "Player image resource not found, will use default drawing");
                 bitmapLoaded = false;
             }
         } catch (Exception e) {
@@ -379,27 +390,66 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
     
-    private void drawEnemy(Canvas canvas, float x, float y, float size) {
-        // Враг - красный круг с шипами
-        enemyPaint.setColor(Color.parseColor("#FF4444"));
-        canvas.drawCircle(x, y, size/2, enemyPaint);
-        
-        // Шипы
-        paint.setColor(Color.parseColor("#CC0000"));
-        for (int i = 0; i < 8; i++) {
-            float angle = (float) (i * Math.PI * 2 / 8);
-            float spikeX = x + (float) Math.cos(angle) * size/2;
-            float spikeY = y + (float) Math.sin(angle) * size/2;
-            canvas.drawCircle(spikeX, spikeY, size/8, paint);
+    private void loadEnemyImage() {
+        try {
+            // Пытаемся загрузить изображение врага из ресурсов (динамически, чтобы не падало при компиляции)
+            int resId = getResources().getIdentifier("enemy", "drawable", getContext().getPackageName());
+            if (resId != 0) {
+                enemyBitmap = BitmapFactory.decodeResource(getResources(), resId);
+                if (enemyBitmap != null) {
+                    enemyBitmapLoaded = true;
+                    Log.d(TAG, "Enemy image loaded successfully");
+                } else {
+                    Log.w(TAG, "Enemy image not found, will use default drawing");
+                    enemyBitmapLoaded = false;
+                }
+            } else {
+                Log.w(TAG, "Enemy image resource not found, will use default drawing");
+                enemyBitmapLoaded = false;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading enemy image", e);
+            enemyBitmapLoaded = false;
         }
-        
-        // Глаза
-        paint.setColor(Color.WHITE);
-        canvas.drawCircle(x - size/6, y - size/6, size/12, paint);
-        canvas.drawCircle(x + size/6, y - size/6, size/12, paint);
-        paint.setColor(Color.BLACK);
-        canvas.drawCircle(x - size/6, y - size/6, size/20, paint);
-        canvas.drawCircle(x + size/6, y - size/6, size/20, paint);
+    }
+    
+    private void drawEnemy(Canvas canvas, float x, float y, float size) {
+        // Если изображение загружено, рисуем его
+        if (enemyBitmapLoaded && enemyBitmap != null) {
+            // Масштабируем изображение до нужного размера
+            float scale = size / Math.max(enemyBitmap.getWidth(), enemyBitmap.getHeight());
+            float scaledWidth = enemyBitmap.getWidth() * scale;
+            float scaledHeight = enemyBitmap.getHeight() * scale;
+            
+            RectF dst = new RectF(
+                x - scaledWidth / 2,
+                y - scaledHeight / 2,
+                x + scaledWidth / 2,
+                y + scaledHeight / 2
+            );
+            canvas.drawBitmap(enemyBitmap, null, dst, paint);
+        } else {
+            // Fallback: рисуем красный круг, если изображение не загружено
+            enemyPaint.setColor(Color.parseColor("#FF4444"));
+            canvas.drawCircle(x, y, size/2, enemyPaint);
+            
+            // Шипы
+            paint.setColor(Color.parseColor("#CC0000"));
+            for (int i = 0; i < 8; i++) {
+                float angle = (float) (i * Math.PI * 2 / 8);
+                float spikeX = x + (float) Math.cos(angle) * size/2;
+                float spikeY = y + (float) Math.sin(angle) * size/2;
+                canvas.drawCircle(spikeX, spikeY, size/8, paint);
+            }
+            
+            // Глаза
+            paint.setColor(Color.WHITE);
+            canvas.drawCircle(x - size/6, y - size/6, size/12, paint);
+            canvas.drawCircle(x + size/6, y - size/6, size/12, paint);
+            paint.setColor(Color.BLACK);
+            canvas.drawCircle(x - size/6, y - size/6, size/20, paint);
+            canvas.drawCircle(x + size/6, y - size/6, size/20, paint);
+        }
     }
     
     @Override
