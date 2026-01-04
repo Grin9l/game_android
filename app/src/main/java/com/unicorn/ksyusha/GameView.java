@@ -294,20 +294,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             return;
         }
         
-        // Фон - небо
-        canvas.drawColor(Color.parseColor("#87CEEB")); // Небесно-голубой
-        
-        // Дорога - асфальт (серая полоса внизу экрана)
-        float roadHeight = screenHeight * 0.6f; // Дорога занимает 60% высоты экрана
-        float roadY = screenHeight - roadHeight;
+        // Фон - дорога на весь экран (без неба)
         paint.setColor(Color.parseColor("#4A4A4A")); // Темно-серый асфальт
-        canvas.drawRect(0, roadY, screenWidth, screenHeight, paint);
+        canvas.drawRect(0, 0, screenWidth, screenHeight, paint);
         
         // Обочина (травяная полоса по краям дороги)
         paint.setColor(Color.parseColor("#228B22")); // Темно-зеленый
         float shoulderWidth = screenWidth * 0.1f; // 10% ширины экрана с каждой стороны
-        canvas.drawRect(0, roadY, shoulderWidth, screenHeight, paint); // Левая обочина
-        canvas.drawRect(screenWidth - shoulderWidth, roadY, screenWidth, screenHeight, paint); // Правая обочина
+        canvas.drawRect(0, 0, shoulderWidth, screenHeight, paint); // Левая обочина
+        canvas.drawRect(screenWidth - shoulderWidth, 0, screenWidth, screenHeight, paint); // Правая обочина
         
         // Две полосы дорожного полотна
         float laneWidth = (screenWidth - shoulderWidth * 2) / 2f;
@@ -319,7 +314,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         paint.setStrokeWidth(8);
         float dashLength = 30;
         float dashGap = 20;
-        float currentY = roadY;
+        float currentY = 0;
         while (currentY < screenHeight) {
             canvas.drawLine(screenWidth / 2f, currentY, screenWidth / 2f, currentY + dashLength, paint);
             currentY += dashLength + dashGap;
@@ -328,8 +323,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         // Краевые линии дороги (белые)
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(5);
-        canvas.drawLine(shoulderWidth, roadY, shoulderWidth, screenHeight, paint); // Левая линия
-        canvas.drawLine(screenWidth - shoulderWidth, roadY, screenWidth - shoulderWidth, screenHeight, paint); // Правая линия
+        canvas.drawLine(shoulderWidth, 0, shoulderWidth, screenHeight, paint); // Левая линия
+        canvas.drawLine(screenWidth - shoulderWidth, 0, screenWidth - shoulderWidth, screenHeight, paint); // Правая линия
         
         // Враги
         for (Enemy enemy : enemies) {
@@ -393,8 +388,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private void drawUnicorn(Canvas canvas, float x, float y, float size) {
         // Если изображение загружено, рисуем его
         if (bitmapLoaded && playerBitmap != null) {
-            // Масштабируем изображение до нужного размера (увеличено в 3 раза)
-            float scale = (size * 3f) / Math.max(playerBitmap.getWidth(), playerBitmap.getHeight());
+            // Масштабируем изображение до нужного размера (увеличено в 3.6 раза = 3 * 1.2)
+            float scale = (size * 3.6f) / Math.max(playerBitmap.getWidth(), playerBitmap.getHeight());
             float scaledWidth = playerBitmap.getWidth() * scale;
             float scaledHeight = playerBitmap.getHeight() * scale;
             
