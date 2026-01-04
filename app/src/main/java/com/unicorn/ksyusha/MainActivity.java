@@ -60,20 +60,4 @@ public class MainActivity extends AppCompatActivity {
             gameView.pause();
         }
     }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (gameView != null) {
-            gameView.pause();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (gameView != null) {
-            gameView.resume();
-        }
-    }
 }
