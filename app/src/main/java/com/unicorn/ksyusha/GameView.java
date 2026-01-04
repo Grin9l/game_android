@@ -34,11 +34,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private ArrayList<Enemy> enemies;
     private Random random;
     private int enemySpawnTimer = 0;
-    private int enemySpawnInterval = 120; // кадры
+    private int enemySpawnInterval = 60; // кадры (уменьшено в 2 раза для большей сложности)
     
     // Игровые параметры
     private int score = 0;
-    private float gameSpeed = 10f; // Увеличена начальная скорость
+    private float gameSpeed = 20f; // Увеличена начальная скорость в 2 раза
     private Paint paint;
     private Paint textPaint;
     private Paint playerPaint;
@@ -164,7 +164,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         score = 0;
         enemies.clear();
         enemySpawnTimer = 0;
-        gameSpeed = 10f; // Увеличена начальная скорость
+        gameSpeed = 20f; // Увеличена начальная скорость в 2 раза
+        enemySpawnInterval = 60; // Враги появляются в 2 раза чаще
         playerLane = 0;
         if (lanePositions != null && lanePositions.length > 0) {
             playerX = lanePositions[playerLane];
@@ -222,9 +223,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if (enemySpawnTimer >= enemySpawnInterval) {
             spawnEnemy();
             enemySpawnTimer = 0;
-            // Увеличиваем сложность
-            enemySpawnInterval = Math.max(60, enemySpawnInterval - 1);
-            gameSpeed = Math.min(12f, gameSpeed + 0.05f);
+            // Увеличиваем сложность (в 2 раза быстрее)
+            enemySpawnInterval = Math.max(30, enemySpawnInterval - 1);
+            gameSpeed = Math.min(24f, gameSpeed + 0.1f);
         }
         
         // Обновление врагов
@@ -287,13 +288,42 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             return;
         }
         
-        // Фон
+        // Фон - небо
         canvas.drawColor(Color.parseColor("#87CEEB")); // Небесно-голубой
         
-        // Дорожки (только 2 дорожки)
-        paint.setColor(Color.parseColor("#90EE90")); // Светло-зеленый
-        float laneWidth = screenWidth / 2f;
-        canvas.drawLine(laneWidth, 0, laneWidth, screenHeight, paint); // Разделительная линия между дорожками
+        // Дорога - асфальт (серая полоса внизу экрана)
+        float roadHeight = screenHeight * 0.6f; // Дорога занимает 60% высоты экрана
+        float roadY = screenHeight - roadHeight;
+        paint.setColor(Color.parseColor("#4A4A4A")); // Темно-серый асфальт
+        canvas.drawRect(0, roadY, screenWidth, screenHeight, paint);
+        
+        // Обочина (травяная полоса по краям дороги)
+        paint.setColor(Color.parseColor("#228B22")); // Темно-зеленый
+        float shoulderWidth = screenWidth * 0.1f; // 10% ширины экрана с каждой стороны
+        canvas.drawRect(0, roadY, shoulderWidth, screenHeight, paint); // Левая обочина
+        canvas.drawRect(screenWidth - shoulderWidth, roadY, screenWidth, screenHeight, paint); // Правая обочина
+        
+        // Две полосы дорожного полотна
+        float laneWidth = (screenWidth - shoulderWidth * 2) / 2f;
+        float leftLaneX = shoulderWidth;
+        float rightLaneX = shoulderWidth + laneWidth;
+        
+        // Разделительная линия между полосами (прерывистая)
+        paint.setColor(Color.parseColor("#FFFF00")); // Желтая разметка
+        paint.setStrokeWidth(8);
+        float dashLength = 30;
+        float dashGap = 20;
+        float currentY = roadY;
+        while (currentY < screenHeight) {
+            canvas.drawLine(screenWidth / 2f, currentY, screenWidth / 2f, currentY + dashLength, paint);
+            currentY += dashLength + dashGap;
+        }
+        
+        // Краевые линии дороги (белые)
+        paint.setColor(Color.WHITE);
+        paint.setStrokeWidth(5);
+        canvas.drawLine(shoulderWidth, roadY, shoulderWidth, screenHeight, paint); // Левая линия
+        canvas.drawLine(screenWidth - shoulderWidth, roadY, screenWidth - shoulderWidth, screenHeight, paint); // Правая линия
         
         // Враги
         for (Enemy enemy : enemies) {
