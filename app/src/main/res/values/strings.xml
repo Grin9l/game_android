@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ксюша Единорог</string>
+    <string name="score">Очки: %d</string>
+    <string name="game_over">Игра окончена!</string>
+    <string name="tap_to_start">Нажмите, чтобы начать</string>
+    <string name="restart">Начать заново</string>
+</resources>
+
