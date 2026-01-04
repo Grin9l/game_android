@@ -115,10 +115,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             Log.d(TAG, "Screen size: " + screenWidth + "x" + screenHeight);
         }
         
-        // Инициализация позиций дорожек (только 2 дорожки)
-        float laneWidth = screenWidth / 2f;
-        lanePositions[0] = laneWidth / 2f; // Левая дорожка
-        lanePositions[1] = laneWidth + laneWidth / 2f; // Правая дорожка
+        // Инициализация позиций дорожек (только 2 дорожки, с учетом обочин)
+        float shoulderWidth = screenWidth * 0.1f; // 10% ширины экрана с каждой стороны
+        float roadWidth = screenWidth - shoulderWidth * 2; // Ширина дороги без обочин
+        float laneWidth = roadWidth / 2f; // Ширина одной полосы
+        lanePositions[0] = shoulderWidth + laneWidth / 2f; // Левая дорожка (центр левой полосы)
+        lanePositions[1] = shoulderWidth + laneWidth + laneWidth / 2f; // Правая дорожка (центр правой полосы)
         
         // Начальная позиция игрока
         playerX = lanePositions[0];
@@ -137,9 +139,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         screenHeight = height;
         
         if (screenWidth > 0 && screenHeight > 0) {
-            float laneWidth = screenWidth / 2f;
-            lanePositions[0] = laneWidth / 2f; // Левая дорожка
-            lanePositions[1] = laneWidth + laneWidth / 2f; // Правая дорожка
+            float shoulderWidth = screenWidth * 0.1f; // 10% ширины экрана с каждой стороны
+            float roadWidth = screenWidth - shoulderWidth * 2; // Ширина дороги без обочин
+            float laneWidth = roadWidth / 2f; // Ширина одной полосы
+            lanePositions[0] = shoulderWidth + laneWidth / 2f; // Левая дорожка
+            lanePositions[1] = shoulderWidth + laneWidth + laneWidth / 2f; // Правая дорожка
             
             playerX = lanePositions[playerLane];
         }
@@ -272,10 +276,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 screenWidth = 1080;
                 screenHeight = 1920;
             }
-            // Обновляем позиции дорожек (только 2 дорожки)
-            float laneWidth = screenWidth / 2f;
-            lanePositions[0] = laneWidth / 2f; // Левая дорожка
-            lanePositions[1] = laneWidth + laneWidth / 2f; // Правая дорожка
+            // Обновляем позиции дорожек (только 2 дорожки, с учетом обочин)
+            float shoulderWidth = screenWidth * 0.1f; // 10% ширины экрана с каждой стороны
+            float roadWidth = screenWidth - shoulderWidth * 2; // Ширина дороги без обочин
+            float laneWidth = roadWidth / 2f; // Ширина одной полосы
+            lanePositions[0] = shoulderWidth + laneWidth / 2f; // Левая дорожка
+            lanePositions[1] = shoulderWidth + laneWidth + laneWidth / 2f; // Правая дорожка
             if (playerX == 0) {
                 playerX = lanePositions[0];
             }
@@ -497,14 +503,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
             
-            // Переключение дорожек (только 2 дорожки)
+            // Переключение дорожек (только 2 дорожки, с учетом обочин)
             float touchX = event.getX();
-            float laneWidth = screenWidth / 2f;
+            float shoulderWidth = screenWidth * 0.1f;
+            float roadWidth = screenWidth - shoulderWidth * 2;
+            float laneWidth = roadWidth / 2f;
+            float roadStartX = shoulderWidth;
+            float roadEndX = screenWidth - shoulderWidth;
             
-            if (touchX < laneWidth) {
-                playerLane = 0; // Левая дорожка
-            } else {
-                playerLane = 1; // Правая дорожка
+            // Проверяем, что касание в пределах дороги
+            if (touchX >= roadStartX && touchX <= roadEndX) {
+                if (touchX < roadStartX + laneWidth) {
+                    playerLane = 0; // Левая дорожка
+                } else {
+                    playerLane = 1; // Правая дорожка
+                }
             }
             
             return true;
