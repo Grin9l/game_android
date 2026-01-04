@@ -48,30 +48,40 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     
     public GameView(Context context) {
         super(context);
-        getHolder().addCallback(this);
-        setFocusable(true);
+        Log.d(TAG, "=== GameView constructor START ===");
         
-        paint = new Paint();
-        paint.setAntiAlias(true);
+        try {
+            getHolder().addCallback(this);
+            setFocusable(true);
+            Log.d(TAG, "SurfaceHolder callback set");
+            
+            paint = new Paint();
+            paint.setAntiAlias(true);
+            
+            textPaint = new Paint();
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTextSize(60);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setAntiAlias(true);
+            
+            playerPaint = new Paint();
+            playerPaint.setColor(Color.parseColor("#FF69B4")); // Розовый для единорога
+            playerPaint.setAntiAlias(true);
+            
+            enemyPaint = new Paint();
+            enemyPaint.setColor(Color.parseColor("#FF4444")); // Красный для врагов
+            enemyPaint.setAntiAlias(true);
+            
+            enemies = new ArrayList<>();
+            random = new Random();
+            
+            Log.d(TAG, "GameView created successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "ERROR in GameView constructor", e);
+            e.printStackTrace();
+        }
         
-        textPaint = new Paint();
-        textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(60);
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setAntiAlias(true);
-        
-        playerPaint = new Paint();
-        playerPaint.setColor(Color.parseColor("#FF69B4")); // Розовый для единорога
-        playerPaint.setAntiAlias(true);
-        
-        enemyPaint = new Paint();
-        enemyPaint.setColor(Color.parseColor("#FF4444")); // Красный для врагов
-        enemyPaint.setAntiAlias(true);
-        
-        enemies = new ArrayList<>();
-        random = new Random();
-        
-        Log.d(TAG, "GameView created");
+        Log.d(TAG, "=== GameView constructor END ===");
     }
     
     @Override
@@ -433,7 +443,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         
         @Override
         public void run() {
+            Log.d(TAG, "GameThread run() started");
             Canvas canvas;
+            int frameCount = 0;
             while (running) {
                 canvas = null;
                 try {
@@ -442,16 +454,25 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         synchronized (surfaceHolder) {
                             gameView.update();
                             gameView.draw(canvas);
+                            frameCount++;
+                            if (frameCount % 60 == 0) {
+                                Log.d(TAG, "GameThread: drawn " + frameCount + " frames");
+                            }
+                        }
+                    } else {
+                        if (frameCount == 0) {
+                            Log.w(TAG, "GameThread: canvas is null on first frame");
                         }
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "Error in game loop", e);
+                    Log.e(TAG, "ERROR in game loop", e);
+                    e.printStackTrace();
                 } finally {
                     if (canvas != null) {
                         try {
                             surfaceHolder.unlockCanvasAndPost(canvas);
                         } catch (Exception e) {
-                            Log.e(TAG, "Error unlocking canvas", e);
+                            Log.e(TAG, "ERROR unlocking canvas", e);
                         }
                     }
                 }
@@ -459,9 +480,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 try {
                     Thread.sleep(16); // ~60 FPS
                 } catch (InterruptedException e) {
+                    Log.w(TAG, "GameThread interrupted");
                     e.printStackTrace();
                 }
             }
+            Log.d(TAG, "GameThread run() ended. Total frames: " + frameCount);
         }
     }
 }
