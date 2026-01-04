@@ -1,6 +1,8 @@
 package com.unicorn.ksyusha;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -42,6 +44,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Paint playerPaint;
     private Paint enemyPaint;
     
+    // Изображение игрока
+    private Bitmap playerBitmap;
+    private boolean bitmapLoaded = false;
+    
     // Размеры экрана
     private int screenWidth;
     private int screenHeight;
@@ -74,6 +80,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             
             enemies = new ArrayList<>();
             random = new Random();
+            
+            // Загружаем изображение игрока
+            loadPlayerImage();
             
             Log.d(TAG, "GameView created successfully");
         } catch (Exception e) {
@@ -317,98 +326,57 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
     
+    private void loadPlayerImage() {
+        try {
+            // Пытаемся загрузить изображение из ресурсов
+            playerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ksyusha);
+            if (playerBitmap != null) {
+                bitmapLoaded = true;
+                Log.d(TAG, "Player image loaded successfully");
+            } else {
+                Log.w(TAG, "Player image not found, will use default drawing");
+                bitmapLoaded = false;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading player image", e);
+            bitmapLoaded = false;
+        }
+    }
+    
     private void drawUnicorn(Canvas canvas, float x, float y, float size) {
-        // Более реалистичный единорог (похож на лошадь)
-        
-        // Тело (более вытянутое, как у лошади)
-        RectF body = new RectF(x - size/2.5f, y - size/4, x + size/2.5f, y + size/2);
-        playerPaint.setColor(Color.parseColor("#F5DEB3")); // Бежевый/кремовый цвет
-        canvas.drawOval(body, playerPaint);
-        
-        // Голова (более реалистичная форма)
-        RectF head = new RectF(x - size/2.5f, y - size * 1.1f, x + size/4, y - size/4);
-        canvas.drawOval(head, playerPaint);
-        
-        // Морда (вытянутая)
-        RectF muzzle = new RectF(x - size/2.5f, y - size * 0.9f, x - size/5, y - size/4);
-        playerPaint.setColor(Color.parseColor("#E6D3A3")); // Светлее для морды
-        canvas.drawOval(muzzle, playerPaint);
-        
-        // Уши
-        Path leftEar = new Path();
-        leftEar.moveTo(x - size/3, y - size * 1.05f);
-        leftEar.lineTo(x - size/2.5f, y - size * 1.25f);
-        leftEar.lineTo(x - size/4, y - size * 1.1f);
-        leftEar.close();
-        playerPaint.setColor(Color.parseColor("#F5DEB3"));
-        canvas.drawPath(leftEar, playerPaint);
-        
-        Path rightEar = new Path();
-        rightEar.moveTo(x + size/5, y - size * 1.05f);
-        rightEar.lineTo(x + size/4, y - size * 1.25f);
-        rightEar.lineTo(x + size/3, y - size * 1.1f);
-        rightEar.close();
-        canvas.drawPath(rightEar, playerPaint);
-        
-        // Рог (золотой, спиралевидный)
-        Path horn = new Path();
-        horn.moveTo(x, y - size * 1.1f);
-        for (int i = 0; i < 8; i++) {
-            float angle = (float) (i * Math.PI / 4);
-            float offsetX = (float) Math.cos(angle) * size/30;
-            float offsetY = (float) Math.sin(angle) * size/30;
-            horn.lineTo(x + offsetX, y - size * 1.3f + i * size/20 + offsetY);
+        // Если изображение загружено, рисуем его
+        if (bitmapLoaded && playerBitmap != null) {
+            // Масштабируем изображение до нужного размера
+            float scale = size / Math.max(playerBitmap.getWidth(), playerBitmap.getHeight());
+            float scaledWidth = playerBitmap.getWidth() * scale;
+            float scaledHeight = playerBitmap.getHeight() * scale;
+            
+            RectF dst = new RectF(
+                x - scaledWidth / 2,
+                y - scaledHeight,
+                x + scaledWidth / 2,
+                y
+            );
+            canvas.drawBitmap(playerBitmap, null, dst, paint);
+        } else {
+            // Fallback: рисуем простой единорог, если изображение не загружено
+            // Тело
+            RectF body = new RectF(x - size/2.5f, y - size/4, x + size/2.5f, y + size/2);
+            playerPaint.setColor(Color.parseColor("#F5DEB3"));
+            canvas.drawOval(body, playerPaint);
+            
+            // Голова
+            RectF head = new RectF(x - size/2.5f, y - size * 1.1f, x + size/4, y - size/4);
+            canvas.drawOval(head, playerPaint);
+            
+            // Глаза
+            paint.setColor(Color.WHITE);
+            canvas.drawCircle(x - size/6, y - size * 0.75f, size/12, paint);
+            canvas.drawCircle(x + size/8, y - size * 0.75f, size/12, paint);
+            paint.setColor(Color.BLACK);
+            canvas.drawCircle(x - size/6, y - size * 0.75f, size/20, paint);
+            canvas.drawCircle(x + size/8, y - size * 0.75f, size/20, paint);
         }
-        paint.setColor(Color.parseColor("#FFD700")); // Золотой
-        paint.setStrokeWidth(size/15);
-        paint.setStyle(Paint.Style.STROKE);
-        canvas.drawPath(horn, paint);
-        paint.setStyle(Paint.Style.FILL);
-        
-        // Глаза (более реалистичные)
-        paint.setColor(Color.WHITE);
-        canvas.drawCircle(x - size/6, y - size * 0.75f, size/12, paint);
-        canvas.drawCircle(x + size/8, y - size * 0.75f, size/12, paint);
-        paint.setColor(Color.BLACK);
-        canvas.drawCircle(x - size/6, y - size * 0.75f, size/20, paint);
-        canvas.drawCircle(x + size/8, y - size * 0.75f, size/20, paint);
-        
-        // Ноздри
-        paint.setColor(Color.parseColor("#8B7355"));
-        canvas.drawCircle(x - size/3, y - size * 0.65f, size/30, paint);
-        canvas.drawCircle(x - size/3.5f, y - size * 0.65f, size/30, paint);
-        
-        // Грива (радужная, более реалистичная)
-        int[] colors = {
-            Color.parseColor("#FF0000"), // Красный
-            Color.parseColor("#FF7F00"), // Оранжевый
-            Color.parseColor("#FFFF00"), // Желтый
-            Color.parseColor("#00FF00"), // Зеленый
-            Color.parseColor("#0000FF"), // Синий
-            Color.parseColor("#4B0082"), // Индиго
-            Color.parseColor("#9400D3")  // Фиолетовый
-        };
-        for (int i = 0; i < 7; i++) {
-            paint.setColor(colors[i % colors.length]);
-            float maneX = x - size/3 + i * size/25;
-            float maneY = y - size * 0.85f - (float)Math.sin(i * 0.5) * size/20;
-            canvas.drawCircle(maneX, maneY, size/12, paint);
-        }
-        
-        // Хвост (радужный)
-        for (int i = 0; i < 5; i++) {
-            paint.setColor(colors[i % colors.length]);
-            float tailX = x + size/2.5f;
-            float tailY = y + size/3 + i * size/15;
-            canvas.drawCircle(tailX, tailY, size/15, paint);
-        }
-        
-        // Ноги (4 ноги)
-        playerPaint.setColor(Color.parseColor("#D2B48C")); // Темнее для ног
-        canvas.drawRect(x - size/3, y + size/2, x - size/4, y + size * 0.7f, playerPaint); // Передняя левая
-        canvas.drawRect(x - size/6, y + size/2, x - size/12, y + size * 0.7f, playerPaint); // Передняя правая
-        canvas.drawRect(x + size/12, y + size/2, x + size/6, y + size * 0.7f, playerPaint); // Задняя левая
-        canvas.drawRect(x + size/4, y + size/2, x + size/3, y + size * 0.7f, playerPaint); // Задняя правая
     }
     
     private void drawEnemy(Canvas canvas, float x, float y, float size) {
