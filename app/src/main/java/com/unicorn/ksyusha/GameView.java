@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -14,6 +15,7 @@ import java.util.Random;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     
+    private static final String TAG = "GameView";
     private GameThread gameThread;
     private boolean isGameRunning = false;
     private boolean isGameOver = false;
@@ -47,6 +49,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public GameView(Context context) {
         super(context);
         getHolder().addCallback(this);
+        setFocusable(true);
         
         paint = new Paint();
         paint.setAntiAlias(true);
@@ -67,10 +70,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         
         enemies = new ArrayList<>();
         random = new Random();
+        
+        Log.d(TAG, "GameView created");
     }
     
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        Log.d(TAG, "surfaceCreated");
         // Получаем размеры экрана
         screenWidth = getWidth();
         screenHeight = getHeight();
@@ -80,6 +86,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             // Если размеры еще не установлены, используем значения по умолчанию
             screenWidth = 1080;
             screenHeight = 1920;
+            Log.w(TAG, "Using default screen size: " + screenWidth + "x" + screenHeight);
+        } else {
+            Log.d(TAG, "Screen size: " + screenWidth + "x" + screenHeight);
         }
         
         // Инициализация позиций дорожек
@@ -100,23 +109,28 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Log.d(TAG, "surfaceChanged: " + width + "x" + height);
         screenWidth = width;
         screenHeight = height;
         
-        float laneWidth = screenWidth / 3f;
-        lanePositions[0] = laneWidth / 2f;
-        lanePositions[1] = laneWidth + laneWidth / 2f;
-        lanePositions[2] = laneWidth * 2 + laneWidth / 2f;
-        
-        playerX = lanePositions[playerLane];
+        if (screenWidth > 0 && screenHeight > 0) {
+            float laneWidth = screenWidth / 3f;
+            lanePositions[0] = laneWidth / 2f;
+            lanePositions[1] = laneWidth + laneWidth / 2f;
+            lanePositions[2] = laneWidth * 2 + laneWidth / 2f;
+            
+            playerX = lanePositions[playerLane];
+        }
     }
     
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
+        Log.d(TAG, "surfaceDestroyed");
         stopGame();
     }
     
     private void startGame() {
+        Log.d(TAG, "startGame");
         // Останавливаем предыдущий поток, если он существует
         if (gameThread != null && gameThread.isAlive()) {
             stopGame();
@@ -138,13 +152,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             gameThread = new GameThread(getHolder(), this);
             gameThread.setRunning(true);
             gameThread.start();
+            Log.d(TAG, "GameThread started");
         } catch (Exception e) {
+            Log.e(TAG, "Error starting game thread", e);
             e.printStackTrace();
             isGameRunning = false;
         }
     }
     
     private void stopGame() {
+        Log.d(TAG, "stopGame");
         if (gameThread != null) {
             boolean retry = true;
             gameThread.setRunning(false);
@@ -223,9 +240,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         return distance < (playerSize + enemy.size) / 2f;
     }
     
-    @Override
     public void draw(Canvas canvas) {
-        // Для SurfaceView не вызываем super.draw()
         // Размеры экрана могут быть не установлены при первом вызове
         if (screenWidth <= 0 || screenHeight <= 0) {
             screenWidth = getWidth();
@@ -423,15 +438,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 canvas = null;
                 try {
                     canvas = surfaceHolder.lockCanvas();
-                    synchronized (surfaceHolder) {
-                        if (canvas != null) {
+                    if (canvas != null) {
+                        synchronized (surfaceHolder) {
                             gameView.update();
                             gameView.draw(canvas);
                         }
                     }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error in game loop", e);
                 } finally {
                     if (canvas != null) {
-                        surfaceHolder.unlockCanvasAndPost(canvas);
+                        try {
+                            surfaceHolder.unlockCanvasAndPost(canvas);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error unlocking canvas", e);
+                        }
                     }
                 }
                 
@@ -444,4 +465,3 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 }
-
