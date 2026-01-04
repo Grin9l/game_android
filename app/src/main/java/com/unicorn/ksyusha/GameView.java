@@ -71,8 +71,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        // Получаем размеры экрана
         screenWidth = getWidth();
         screenHeight = getHeight();
+        
+        // Проверка на валидность размеров
+        if (screenWidth <= 0 || screenHeight <= 0) {
+            // Если размеры еще не установлены, используем значения по умолчанию
+            screenWidth = 1080;
+            screenHeight = 1920;
+        }
         
         // Инициализация позиций дорожек
         float laneWidth = screenWidth / 3f;
@@ -84,7 +92,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         playerX = lanePositions[1];
         playerY = screenHeight - 200;
         
-        startGame();
+        // Запускаем игру только если еще не запущена
+        if (!isGameRunning) {
+            startGame();
+        }
     }
     
     @Override
@@ -106,6 +117,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
     
     private void startGame() {
+        // Останавливаем предыдущий поток, если он существует
+        if (gameThread != null && gameThread.isAlive()) {
+            stopGame();
+        }
+        
         isGameRunning = true;
         isGameOver = false;
         isPaused = true;
@@ -114,11 +130,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         enemySpawnTimer = 0;
         gameSpeed = 5f;
         playerLane = 1;
-        playerX = lanePositions[playerLane];
+        if (lanePositions != null && lanePositions.length > 1) {
+            playerX = lanePositions[playerLane];
+        }
         
-        gameThread = new GameThread(getHolder(), this);
-        gameThread.setRunning(true);
-        gameThread.start();
+        try {
+            gameThread = new GameThread(getHolder(), this);
+            gameThread.setRunning(true);
+            gameThread.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+            isGameRunning = false;
+        }
     }
     
     private void stopGame() {
@@ -204,53 +227,71 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void draw(Canvas canvas) {
         super.draw(canvas);
         
-        if (canvas == null) {
+        if (canvas == null || screenWidth <= 0 || screenHeight <= 0) {
             return;
         }
         
-        // Фон
-        canvas.drawColor(Color.parseColor("#87CEEB")); // Небесно-голубой
-        
-        // Дорожки
-        paint.setColor(Color.parseColor("#90EE90")); // Светло-зеленый
-        float laneWidth = screenWidth / 3f;
-        for (int i = 1; i < 3; i++) {
-            canvas.drawLine(i * laneWidth, 0, i * laneWidth, screenHeight, paint);
-        }
-        
-        // Враги
-        for (Enemy enemy : enemies) {
-            drawEnemy(canvas, enemy.x, enemy.y, enemy.size);
-        }
-        
-        // Игрок (единорог Ксюша)
-        drawUnicorn(canvas, playerX, playerY, playerSize);
-        
-        // Очки
-        textPaint.setTextSize(50);
-        textPaint.setColor(Color.WHITE);
-        canvas.drawText("Очки: " + score, screenWidth / 2f, 80, textPaint);
-        
-        // Экран паузы/старта
-        if (isPaused && !isGameOver) {
-            paint.setColor(Color.parseColor("#80000000")); // Полупрозрачный черный
-            canvas.drawRect(0, 0, screenWidth, screenHeight, paint);
-            textPaint.setTextSize(70);
-            textPaint.setColor(Color.WHITE);
-            canvas.drawText("Нажмите, чтобы начать", screenWidth / 2f, screenHeight / 2f, textPaint);
-        }
-        
-        // Экран окончания игры
-        if (isGameOver) {
-            paint.setColor(Color.parseColor("#80000000"));
-            canvas.drawRect(0, 0, screenWidth, screenHeight, paint);
-            textPaint.setTextSize(80);
-            textPaint.setColor(Color.WHITE);
-            canvas.drawText("Игра окончена!", screenWidth / 2f, screenHeight / 2f - 100, textPaint);
-            textPaint.setTextSize(60);
-            canvas.drawText("Очки: " + score, screenWidth / 2f, screenHeight / 2f, textPaint);
-            textPaint.setTextSize(50);
-            canvas.drawText("Нажмите, чтобы начать заново", screenWidth / 2f, screenHeight / 2f + 100, textPaint);
+        try {
+            // Фон
+            canvas.drawColor(Color.parseColor("#87CEEB")); // Небесно-голубой
+            
+            // Дорожки
+            if (paint != null) {
+                paint.setColor(Color.parseColor("#90EE90")); // Светло-зеленый
+                float laneWidth = screenWidth / 3f;
+                for (int i = 1; i < 3; i++) {
+                    canvas.drawLine(i * laneWidth, 0, i * laneWidth, screenHeight, paint);
+                }
+            }
+            
+            // Враги
+            if (enemies != null) {
+                for (Enemy enemy : enemies) {
+                    drawEnemy(canvas, enemy.x, enemy.y, enemy.size);
+                }
+            }
+            
+            // Игрок (единорог Ксюша)
+            drawUnicorn(canvas, playerX, playerY, playerSize);
+            
+            // Очки
+            if (textPaint != null) {
+                textPaint.setTextSize(50);
+                textPaint.setColor(Color.WHITE);
+                canvas.drawText("Очки: " + score, screenWidth / 2f, 80, textPaint);
+            }
+            
+            // Экран паузы/старта
+            if (isPaused && !isGameOver) {
+                if (paint != null) {
+                    paint.setColor(Color.parseColor("#80000000")); // Полупрозрачный черный
+                    canvas.drawRect(0, 0, screenWidth, screenHeight, paint);
+                }
+                if (textPaint != null) {
+                    textPaint.setTextSize(70);
+                    textPaint.setColor(Color.WHITE);
+                    canvas.drawText("Нажмите, чтобы начать", screenWidth / 2f, screenHeight / 2f, textPaint);
+                }
+            }
+            
+            // Экран окончания игры
+            if (isGameOver) {
+                if (paint != null) {
+                    paint.setColor(Color.parseColor("#80000000"));
+                    canvas.drawRect(0, 0, screenWidth, screenHeight, paint);
+                }
+                if (textPaint != null) {
+                    textPaint.setTextSize(80);
+                    textPaint.setColor(Color.WHITE);
+                    canvas.drawText("Игра окончена!", screenWidth / 2f, screenHeight / 2f - 100, textPaint);
+                    textPaint.setTextSize(60);
+                    canvas.drawText("Очки: " + score, screenWidth / 2f, screenHeight / 2f, textPaint);
+                    textPaint.setTextSize(50);
+                    canvas.drawText("Нажмите, чтобы начать заново", screenWidth / 2f, screenHeight / 2f + 100, textPaint);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
     
